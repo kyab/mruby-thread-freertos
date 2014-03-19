@@ -7,23 +7,24 @@
 #include <mruby/variable.h>
 #include <mruby/thread.h>
 
-
-#ifdef ENABLE_THREAD
-
 /* Target version and port */
 /* 
   FreeRTOS V7.0.1 
   at https://github.com/AeroQuad/AeroQuad/tree/master/Libmaple/libmaple/libraries/FreeRTOS
 */
-#include "FreeRTOS.h"
-#include "semphr.h"
-#include "task.h"
+#include "MapleFreeRTOS.h"
 
+#ifdef ENABLE_THREAD
+
+void debugc(char c)
+{
+  putchar(c);
+}
 
 int
 mrb_freertos_rwlock_init(mrb_state *mrb, mrb_rwlock_t *lock)
 {
-  //puts ("freertos rwlock init");
+  debugc('i');
   xSemaphoreHandle mutex = xSemaphoreCreateMutex();
   if (mutex == NULL) {
     return -1;
@@ -41,6 +42,7 @@ mrb_freertos_rwlock_destroy(mrb_state *mrb, mrb_rwlock_t *lock)
   }
   /*my FreeRTOS port somehow does not have SemaphoreDelete
   /*vSemaphoreDelete(mutex);*/
+  xSemaphoreGive(mutex);
 
   return RWLOCK_STATUS_OK;
 }
@@ -48,6 +50,7 @@ mrb_freertos_rwlock_destroy(mrb_state *mrb, mrb_rwlock_t *lock)
 int
 mrb_freertos_rwlock_wrlock(mrb_state *mrb, mrb_rwlock_t *lock, uint32_t timeout_ms)
 {
+  debugc('l');
   xSemaphoreHandle mutex = (xSemaphoreHandle)lock->rwlock;
   if (mutex == NULL) {
     return RWLOCK_STATUS_INVALID_ARGUMENTS;
@@ -57,6 +60,7 @@ mrb_freertos_rwlock_wrlock(mrb_state *mrb, mrb_rwlock_t *lock, uint32_t timeout_
   if (pdTRUE == xSemaphoreTake(mutex, timeout_tick)) {
     return RWLOCK_STATUS_OK;
   }else{
+    debugc('x');
     return RWLOCK_STATUS_TIMEOUT;
   }
 }
@@ -70,6 +74,7 @@ mrb_freertos_rwlock_rdlock(mrb_state *mrb, mrb_rwlock_t *lock, uint32_t timeout_
 int
 mrb_freertos_rwlock_unlock(mrb_state *mrb, mrb_rwlock_t *lock)
 {
+  debugc('u');
   xSemaphoreHandle mutex = (xSemaphoreHandle)lock->rwlock;
   if (mutex == NULL) {
     return RWLOCK_STATUS_INVALID_ARGUMENTS;
@@ -77,10 +82,17 @@ mrb_freertos_rwlock_unlock(mrb_state *mrb, mrb_rwlock_t *lock)
   if (pdTRUE == xSemaphoreGive(mutex)) {
     return RWLOCK_STATUS_OK;
   }else{
+    debugc('X');
     return RWLOCK_STATUS_UNKNOWN; /*maybe give(unlock) without take(lock) called*/
   } 
 }
 
+void
+mrb_freertos_rwlock_deadlock_handler(mrb_state *mrb, mrb_rwlock_t *lock)
+{
+  debugc('D');
+  vTaskDelay(1000);
+}
 
 mrb_thread_lock_api const lock_api_entry = {
   mrb_freertos_rwlock_init,
@@ -88,7 +100,7 @@ mrb_thread_lock_api const lock_api_entry = {
   mrb_freertos_rwlock_rdlock,
   mrb_freertos_rwlock_wrlock,
   mrb_freertos_rwlock_unlock,
-  NULL,
+  mrb_freertos_rwlock_deadlock_handler
 };
 
 mrb_gem_thread_t
@@ -144,6 +156,9 @@ mrb_thread_api const thread_api_entry = {
   mrb_freertos_thread_free,
 };
 
+
+extern "C"{
+
 void
 mrb_mruby_thread_freertos_gem_init(mrb_state* mrb)
 {
@@ -161,6 +176,7 @@ mrb_mruby_thread_freertos_gem_init(mrb_state* mrb)
 void
 mrb_mruby_thread_freertos_gem_final(mrb_state* mrb)
 {
+}
 }
 
 #endif /* ENABLE_THREAD */

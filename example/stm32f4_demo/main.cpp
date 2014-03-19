@@ -20,7 +20,8 @@
 */
 #include <stdlib.h>
 #include "wirish.h"
-#include "FreeRTOS/MapleFreeRTOS.h"
+//#include "FreeRTOS/MapleFreeRTOS.h"
+#include "MapleFreeRTOS.h"
 
 #include <errno.h>
 extern "C" {
@@ -365,7 +366,7 @@ static void ruby_task(void *pvParameters)
             g_mrb->exc = 0;
             vTaskDelay(10000);
         }
-        vTaskDelay(100);
+        //vTaskDelay(100);
 
     }
 }
@@ -379,6 +380,28 @@ bool init_mruby();
 
 static void main_task(void *pvParameters) 
 {
+    // Serial2.println("testing mutex timeout-----");
+    // xSemaphoreHandle mutex = xSemaphoreCreateMutex();
+    // if (pdFALSE == xSemaphoreTake(mutex, 0)){
+    //     Serial2.println("failed to 1st take");
+    // }
+    // if (pdFALSE == xSemaphoreGive(mutex)){
+    //     Serial2.println("failed to 1st give");
+    // }
+
+    // if (pdFALSE == xSemaphoreTake(mutex, 0)){
+    //     Serial2.println("failed to 2nd take");
+    // }
+    // Serial2.println("trying to take with timeout = 5000ms");
+    // if (pdFALSE == xSemaphoreTake(mutex, 5000 / portTICK_RATE_MS)){
+    //     Serial2.println("timeout. this is expected");
+    // }else{
+    //     Serial2.println("success to take..wrong!");
+    // }
+    // Serial2.println("testing mutext timeout----done");
+
+    // goto wait;
+
     mrb_value blinker1;
     mrb_value blinker2;
     Serial2.println("main task started.");
@@ -550,6 +573,7 @@ int main(void) {
 mrb_value mrb_freertos_sleep(mrb_state *mrb, mrb_value self) {
   mrb_int ms;
   mrb_get_args(mrb, "i", &ms);
+  //printf("now got into vTaskDelay with %d[ms]\n",ms);
   vTaskDelay(ms);   //equivalent to pthread's sleep
   return mrb_nil_value();
 }
