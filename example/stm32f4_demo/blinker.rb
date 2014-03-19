@@ -14,12 +14,15 @@ class Blinker
 	end
 
 	def blink_once
-		#Serial2.println("start LED:#{@pin}")
+		Serial2.println("start LED:#{@pin}")
 		digitalWrite(@pin, HIGH)
+		Serial2.println("P1:#{@pin}")
 		FreeRTOS.sleep(@interval)
+		Serial2.println("P2:#{@pin}")
 		digitalWrite(@pin, LOW)
+		Serial2.println("P3:#{@pin}")
 		FreeRTOS.sleep(@interval)
-		#Serial2.println("end LED:#{@pin}")
+		Serial2.println("end LED:#{@pin}")
 		nil
 	end
 end

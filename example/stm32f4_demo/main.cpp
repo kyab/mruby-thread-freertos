@@ -19,8 +19,8 @@
 
 */
 #include <stdlib.h>
+
 #include "wirish.h"
-//#include "FreeRTOS/MapleFreeRTOS.h"
 #include "MapleFreeRTOS.h"
 
 #include <errno.h>
@@ -137,12 +137,6 @@ extern "C" {
 
 }
 
-// extern "C" {
-//     void c_delay(int ms){
-//         delay(ms);
-//     }
-// }
-
 //abort signal handler
 void abort_handler(int signo)
 {
@@ -188,8 +182,6 @@ extern "C" {
 unsigned int high = NULL;
 int failcount = 0;
 
-char mes[128];
-
 void *myallocf(mrb_state *mrb, void *p, size_t size, void *ud){
 
     //never use printf. 
@@ -201,9 +193,6 @@ void *myallocf(mrb_state *mrb, void *p, size_t size, void *ud){
         return NULL;
     }
 
-    //sprintf(mes, "normal heap: size= %u, current total = %u", size, total_size);
-    //puts(mes);
-
     void *ret = realloc(p, size);
     if (!ret){
         digitalWrite(LED_BLUE, HIGH);
@@ -213,27 +202,22 @@ void *myallocf(mrb_state *mrb, void *p, size_t size, void *ud){
         Serial2.print(total_size,DEC);
         Serial2.print("\n\tfail count : ");
         Serial2.println(++failcount, DEC);
-        delay(1000);
 
-        //self abort
-        abort();
         return NULL;
     }
     Serial2.print('o');
     unsigned int point = (unsigned int)ret + size;
     if (point > high){
         high = point;
-        //Serial2.print("high increased to 0x");
-        //Serial2.println(high,HEX);
     }
     total_size += size;
     return ret;
 }
 
 
-/* custom allocator
+/* 
 
-
+custom allocator
 
 */
 void *myallocfCCM(mrb_state *mrb, void *p, size_t size, void *ud)
@@ -272,18 +256,13 @@ void *myallocfCCM(mrb_state *mrb, void *p, size_t size, void *ud)
             Serial2.print(total_size, DEC);
             Serial2.print("\n\tfail count : ");
             Serial2.println(++failcount, DEC);
-            delay(1000);
 
-            //self abort
-            //abort();
             return NULL;
         }
 
         unsigned int point = (unsigned int)ret + size;
         if (point > high){
             high = point;
-            //Serial2.print("\n high point = ");
-            //Serial2.println(high, HEX);
         }
 
     }
@@ -344,7 +323,6 @@ static void c_task(void *pvParameters)
         vTaskDelay(interval_ms);
         digitalWrite(pin, LOW);
         vTaskDelay(interval_ms);
-        //Serial2.println("foo");
     } 
 }
 
@@ -359,14 +337,16 @@ static void ruby_task(void *pvParameters)
 
         mrb_funcall(g_mrb, *blinker, "blink_once", 0);
 
-        //is exception occure?
+        //exception check
         if (g_mrb->exc) {
             p(g_mrb, mrb_obj_value(g_mrb->exc));
             Serial2.println("failed to blink_once!");
             g_mrb->exc = 0;
+
+            //prevent too much serial output 
             vTaskDelay(10000);
         }
-        //vTaskDelay(100);
+        mrb_gc_arena_restore(g_mrb, ai);
 
     }
 }
@@ -399,7 +379,6 @@ static void main_task(void *pvParameters)
     //     Serial2.println("success to take..wrong!");
     // }
     // Serial2.println("testing mutext timeout----done");
-
     // goto wait;
 
     mrb_value blinker1;
@@ -424,6 +403,7 @@ static void main_task(void *pvParameters)
 
     blinker1 = make_blinker_obj(LED_R1, 200);
     blinker2 = make_blinker_obj(LED_R2, 200);
+    ai = mrb_gc_arena_save(g_mrb);
 
 
     //launch the threads
@@ -464,7 +444,7 @@ static void main_task(void *pvParameters)
         goto wait;
     }
 
-    vTaskDelay(100);
+    vTaskDelay(2050);
 
     ret = xTaskCreate( ruby_task,
                         (signed portCHAR *)"Ruby Task2",
@@ -490,8 +470,9 @@ static void main_task(void *pvParameters)
     //     return;       
     // }
 
-    vTaskDelay(100);
+    vTaskDelay(200);
     Serial2.println("main task done.");
+
 wait:
     for(;;)
     {
@@ -517,7 +498,6 @@ bool init_mruby()
 
     Serial2.println("mruby initialized");
 
-    ai = mrb_gc_arena_save(g_mrb);
     return true;
 }
 

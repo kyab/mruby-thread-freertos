@@ -18,13 +18,13 @@
 
 void debugc(char c)
 {
-  putchar(c);
+  //Serial2.write(c);
 }
 
 int
 mrb_freertos_rwlock_init(mrb_state *mrb, mrb_rwlock_t *lock)
 {
-  debugc('i');
+  //debugc('i');
   xSemaphoreHandle mutex = xSemaphoreCreateMutex();
   if (mutex == NULL) {
     return -1;
@@ -50,7 +50,7 @@ mrb_freertos_rwlock_destroy(mrb_state *mrb, mrb_rwlock_t *lock)
 int
 mrb_freertos_rwlock_wrlock(mrb_state *mrb, mrb_rwlock_t *lock, uint32_t timeout_ms)
 {
-  debugc('l');
+  debugc('L');
   xSemaphoreHandle mutex = (xSemaphoreHandle)lock->rwlock;
   if (mutex == NULL) {
     return RWLOCK_STATUS_INVALID_ARGUMENTS;
@@ -58,6 +58,7 @@ mrb_freertos_rwlock_wrlock(mrb_state *mrb, mrb_rwlock_t *lock, uint32_t timeout_
 
   portTickType timeout_tick = timeout_ms / portTICK_RATE_MS;
   if (pdTRUE == xSemaphoreTake(mutex, timeout_tick)) {
+    debugc('l');
     return RWLOCK_STATUS_OK;
   }else{
     debugc('x');
@@ -74,12 +75,13 @@ mrb_freertos_rwlock_rdlock(mrb_state *mrb, mrb_rwlock_t *lock, uint32_t timeout_
 int
 mrb_freertos_rwlock_unlock(mrb_state *mrb, mrb_rwlock_t *lock)
 {
-  debugc('u');
+  debugc('U');
   xSemaphoreHandle mutex = (xSemaphoreHandle)lock->rwlock;
   if (mutex == NULL) {
     return RWLOCK_STATUS_INVALID_ARGUMENTS;
   }
   if (pdTRUE == xSemaphoreGive(mutex)) {
+    debugc('u');
     return RWLOCK_STATUS_OK;
   }else{
     debugc('X');
