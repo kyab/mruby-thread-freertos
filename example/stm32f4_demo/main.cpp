@@ -435,7 +435,7 @@ static void main_task(void *pvParameters)
 
     ret = xTaskCreate( ruby_task,
                         (signed portCHAR *)"Ruby Task1",
-                        configMINIMAL_STACK_SIZE + 1000,
+                        configMINIMAL_STACK_SIZE + 2048,
                         (void *)&blinker1,
                         TASK_PRIORITY_NORMAL,
                         NULL );
@@ -448,7 +448,7 @@ static void main_task(void *pvParameters)
 
     ret = xTaskCreate( ruby_task,
                         (signed portCHAR *)"Ruby Task2",
-                        configMINIMAL_STACK_SIZE + 1000,
+                        configMINIMAL_STACK_SIZE + 2048,
                         (void *)&blinker2,
                         TASK_PRIORITY_NORMAL,
                         NULL );

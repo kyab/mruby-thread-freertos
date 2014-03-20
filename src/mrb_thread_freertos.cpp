@@ -92,7 +92,7 @@ mrb_freertos_rwlock_unlock(mrb_state *mrb, mrb_rwlock_t *lock)
 void
 mrb_freertos_rwlock_deadlock_handler(mrb_state *mrb, mrb_rwlock_t *lock)
 {
-  debugc('D');
+  Serial2.println("DEADLOCK!!");
   vTaskDelay(1000);
 }
 
