@@ -401,8 +401,8 @@ static void main_task(void *pvParameters)
         Serial2.println("init_mruby() return success");
     }
 
-    blinker1 = make_blinker_obj(LED_R1, 200);
-    blinker2 = make_blinker_obj(LED_R2, 200);
+    blinker1 = make_blinker_obj(LED_R1, 400);
+    blinker2 = make_blinker_obj(LED_R2, 400);
     ai = mrb_gc_arena_save(g_mrb);
 
 
@@ -444,7 +444,7 @@ static void main_task(void *pvParameters)
         goto wait;
     }
 
-    vTaskDelay(2050);
+    vTaskDelay(1234);
 
     ret = xTaskCreate( ruby_task,
                         (signed portCHAR *)"Ruby Task2",
@@ -504,7 +504,7 @@ bool init_mruby()
 void setup() {
 
     Serial2.begin(38400);
-    Serial2.println("Hello mruby thread safe RiteVM demo");
+    Serial2.println("Hello mruby thread safe RiteVM demo.");
 
     //setup pins
     pinMode(LED_C1, OUTPUT);
@@ -553,7 +553,7 @@ int main(void) {
 mrb_value mrb_freertos_sleep(mrb_state *mrb, mrb_value self) {
   mrb_int ms;
   mrb_get_args(mrb, "i", &ms);
-  //printf("now got into vTaskDelay with %d[ms]\n",ms);
+  printf("now got into vTaskDelay with %d[ms]\n",ms);
   vTaskDelay(ms);   //equivalent to pthread's sleep
   return mrb_nil_value();
 }

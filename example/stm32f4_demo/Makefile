@@ -138,7 +138,7 @@ $(foreach m,$(LIBMAPLE_MODULES),$(eval $(call LIBMAPLE_MODULE_template,$(m))))
 # main target
 include $(SRCROOT)/build-targets.mk
 
-$(BUILD_PATH)/$(BOARD).elf: $(BUILDDIRS) $(TGT_BIN) $(BUILD_PATH)/main.o $(BUILD_PATH)/blinker.o mruby
+$(BUILD_PATH)/$(BOARD).elf: mruby $(BUILDDIRS) $(TGT_BIN) $(BUILD_PATH)/main.o $(BUILD_PATH)/blinker.o
 	$(SILENT_LD) $(CXX) $(LDFLAGS) -o $@ $(BUILD_PATH)/main.o $(BUILD_PATH)/blinker.o $(TGT_BIN) $(MRUBY_LIB) -lmruby -Wl,-Map,$(BUILD_PATH)/$(BOARD).map
 
 WIRISH_INCLUDES += -I$(SRCROOT)/libraries

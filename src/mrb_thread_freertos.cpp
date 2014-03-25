@@ -25,7 +25,7 @@ int
 mrb_freertos_rwlock_init(mrb_state *mrb, mrb_rwlock_t *lock)
 {
   //debugc('i');
-  xSemaphoreHandle mutex = xSemaphoreCreateMutex();
+  xSemaphoreHandle mutex = xSemaphoreCreateRecursiveMutex();
   if (mutex == NULL) {
     return -1;
   }
@@ -42,7 +42,7 @@ mrb_freertos_rwlock_destroy(mrb_state *mrb, mrb_rwlock_t *lock)
   }
   /*my FreeRTOS port somehow does not have SemaphoreDelete
   /*vSemaphoreDelete(mutex);*/
-  xSemaphoreGive(mutex);
+  xSemaphoreGiveRecursive(mutex);
 
   return RWLOCK_STATUS_OK;
 }
@@ -57,7 +57,7 @@ mrb_freertos_rwlock_wrlock(mrb_state *mrb, mrb_rwlock_t *lock, uint32_t timeout_
   }
 
   portTickType timeout_tick = timeout_ms / portTICK_RATE_MS;
-  if (pdTRUE == xSemaphoreTake(mutex, timeout_tick)) {
+  if (pdTRUE == xSemaphoreTakeRecursive(mutex, timeout_tick)) {
     debugc('l');
     return RWLOCK_STATUS_OK;
   }else{
@@ -80,7 +80,7 @@ mrb_freertos_rwlock_unlock(mrb_state *mrb, mrb_rwlock_t *lock)
   if (mutex == NULL) {
     return RWLOCK_STATUS_INVALID_ARGUMENTS;
   }
-  if (pdTRUE == xSemaphoreGive(mutex)) {
+  if (pdTRUE == xSemaphoreGiveRecursive(mutex)) {
     debugc('u');
     return RWLOCK_STATUS_OK;
   }else{
@@ -132,6 +132,7 @@ mrb_freertos_thread_equals(mrb_state *mrb, mrb_gem_thread_t t1, mrb_gem_thread_t
 mrb_value
 mrb_freertos_thread_join(mrb_state *mrb, mrb_gem_thread_t t)
 {
+  Serial2.println("---THREAD JOIN NOT SUPPORTED !!");
   /*
     There are no 'join' in FreeRTOS.
     task should never return.
